@@ -1,38 +1,45 @@
 @echo off
 setlocal
 set "VBS=%~dp0Start-FollowupAddin-Hidden.vbs"
+set "STARTUP=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
+set "LNK=%STARTUP%\FollowupAddinServer.lnk"
 
 echo.
 echo  Setting up auto-start for the Follow-up Add-in server...
-echo  Task name: FollowupMeetingAddinServer
 echo.
 
-schtasks /create ^
-  /tn "FollowupMeetingAddinServer" ^
-  /tr "wscript.exe \"%VBS%\"" ^
-  /sc ONLOGON ^
-  /ru "%USERDOMAIN%\%USERNAME%" ^
-  /rl HIGHEST ^
-  /f >nul 2>&1
+:: Remove any old broken copy of the .vbs in the Startup folder
+if exist "%STARTUP%\FollowupAddinServer.vbs" del /f /q "%STARTUP%\FollowupAddinServer.vbs"
 
-if %ERRORLEVEL% EQU 0 (
-  echo  [OK]  Task created. The server will start silently at every login.
-  echo.
-  echo  To disable auto-start later:
-  echo    schtasks /delete /tn "FollowupMeetingAddinServer" /f
-  echo  Or open Task Scheduler and delete "FollowupMeetingAddinServer".
-  echo.
-  echo  Starting the server now for this session...
-  wscript.exe "%VBS%"
-  echo  Done. Wait a few seconds then reload the add-in in OWA.
+:: Create a proper shortcut (not a copy) pointing to the VBScript in the project folder
+PowerShell -NonInteractive -Command ^
+  "$s=New-Object -ComObject WScript.Shell;" ^
+  "$l=$s.CreateShortcut('%LNK%');" ^
+  "$l.TargetPath='wscript.exe';" ^
+  "$l.Arguments='\""%VBS%\"';" ^
+  "$l.WorkingDirectory='%~dp0';" ^
+  "$l.WindowStyle=7;" ^
+  "$l.Description='Follow-up Add-in dev server';" ^
+  "$l.Save()" >nul 2>&1
+
+if exist "%LNK%" (
+  echo  [OK]  Startup shortcut created - server will start silently at next login.
 ) else (
-  echo  [!!] Task Scheduler registration failed (may need admin rights).
-  echo       Falling back: added shortcut to Windows Startup folder instead.
-  set "STARTUP=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
-  copy /y "%VBS%" "%STARTUP%\FollowupAddinServer.vbs" >nul
-  echo  [OK]  Shortcut added to Startup folder - will auto-start at next login.
-  wscript.exe "%VBS%"
+  echo  [!!]  Could not create Startup shortcut. You may need to run manually.
 )
 
+:: Also try Task Scheduler as belt-and-suspenders
+PowerShell -NonInteractive -Command ^
+  "$a=New-ScheduledTaskAction -Execute 'wscript.exe' -Argument '\""%VBS%\"';" ^
+  "$t=New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME;" ^
+  "$t.Delay='PT20S';" ^
+  "$s=New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries;" ^
+  "Register-ScheduledTask -TaskName 'FollowupMeetingAddinServer' -Action $a -Trigger $t -Settings $s -Force -EA SilentlyContinue" >nul 2>&1
+
+echo  [OK]  Task Scheduler entry updated (backup, 20s delay).
+echo.
+echo  Starting server now for this session...
+wscript.exe "%VBS%"
+echo  Done. The add-in will be ready in about 8 seconds.
 echo.
 pause
