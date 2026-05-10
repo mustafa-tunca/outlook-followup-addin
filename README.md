@@ -16,13 +16,12 @@ Open an existing meeting, click **"Create Follow-up"**, review the pre-filled de
 
 ## Requirements
 
-Before you start, make sure the following are installed:
-
 | Requirement | Where to get it | Notes |
 |---|---|---|
 | **Node.js 18 LTS or newer** | https://nodejs.org → "LTS" download | Includes `npm`. Restart your PC after install. |
-| **Microsoft 365 account** | Your company account | Outlook Web App (OWA) access required |
+| **Microsoft 365 account** | Your company / personal M365 account | Outlook Web App (OWA) access required |
 | **A modern browser** | Edge, Chrome, Firefox | For OWA |
+| **Windows 10 / 11** | — | The auto-start scripts are Windows-only |
 
 > **Corporate IT note:** The add-in runs entirely on your own PC (`https://localhost:3000`).
 > No data is sent to any external server. The HTTPS certificate is self-signed and only trusted locally.
@@ -35,29 +34,35 @@ Before you start, make sure the following are installed:
 
 1. Go to **https://nodejs.org** and download the **LTS** version.
 2. Run the installer, keep all defaults, click through to finish.
-3. **Restart your PC** so the `npm` command becomes available system-wide.
+3. **Restart your PC** so `npm` becomes available in the command prompt.
 
 ### Step 2 — Get the project files
 
-Copy the entire `outlook-followup-addin` folder to your PC.
-You can put it anywhere — for example `C:\Tools\outlook-followup-addin\` or keep it on OneDrive.
+**Option A — Clone from GitHub (recommended):**
+```
+git clone https://github.com/mustafa-tunca/outlook-followup-addin.git
+```
 
-> Do **not** move the folder after setup. The auto-start task remembers the exact path.
-> If you move it later, re-run `Install.bat`.
+**Option B — Download ZIP:**
+Click the green **Code** button on GitHub → **Download ZIP** → extract to any folder.
+
+> Keep the folder in a permanent location. The auto-start task remembers the exact path.
+> If you move the folder later, re-run `Install.bat`.
 
 ### Step 3 — Run the installer
 
 Double-click **`Install.bat`** inside the folder.
 
-The installer will automatically:
+> **Windows may warn** "Windows protected your PC". Click **More info → Run anyway**.
+> This is expected for unsigned scripts.
+
+The installer will:
 1. Check that Node.js is available
 2. Download all required packages (`npm install`)
 3. Build the add-in (`npm run build`)
-4. Install and trust the HTTPS development certificate
-   *(A Windows UAC prompt will appear — click **Yes**)*
-5. Register a background task that starts the server silently at every login
-
-> After the installer finishes, it prints the OWA sideloading instructions. Keep the window open for reference.
+4. Install and trust the local HTTPS certificate *(a UAC prompt will appear — click **Yes**)*
+5. Register a background task so the server starts **silently** at every login (no window)
+6. Start the server immediately for this session
 
 ---
 
@@ -66,18 +71,17 @@ The installer will automatically:
 This step is done **once per browser / per user account**.
 
 1. Open **Outlook Web App** in your browser (e.g. `https://outlook.office.com`)
-2. Click any **calendar appointment** to open it in read mode
+2. Click any **calendar appointment** to open it
 3. In the appointment window, click **"..."** (More options) in the toolbar
 4. Choose **"Get Add-ins"** (or **"Manage add-ins"**)
-5. In the dialog that opens, click **"My add-ins"** in the left panel
-6. Scroll to the bottom and click **"+ Add a custom add-in"** → **"Add from file..."**
+5. In the dialog, click **"My add-ins"** in the left panel
+6. Scroll to the bottom → **"+ Add a custom add-in"** → **"Add from file..."**
 7. Browse to your `outlook-followup-addin` folder and select **`manifest.json`**
-8. Confirm any security warning
-9. Close the dialog
+8. Confirm any security warning and close the dialog
 
 The **"Create Follow-up"** button now appears in the appointment ribbon.
 
-> **Tip:** If you don't see the button, close and reopen the appointment.
+> **Tip:** If the button doesn't appear, close and reopen the appointment.
 
 ---
 
@@ -85,21 +89,20 @@ The **"Create Follow-up"** button now appears in the appointment ribbon.
 
 ### The server starts automatically
 
-After running `Install.bat` once, the dev server starts **silently in the background** every time you log into Windows. You don't need to do anything.
+After running `Install.bat` once, the dev server starts **silently in the background** every time you log into Windows — no window, no notification. It is ready within about 15 seconds of login.
 
-The server runs at `https://localhost:3000` and serves the add-in files to OWA.
+The server runs at `https://localhost:3000` and serves the add-in to OWA.
 
 ### Using the add-in
 
 1. Open any calendar appointment in OWA
-   (works for meetings you organised **and** meetings you were invited to)
+   *(works for meetings you organised **and** meetings you were invited to)*
 2. Click **"Create Follow-up"** in the ribbon
 3. A side panel opens with pre-filled details:
    - **Subject** — editable, already cleaned and numbered
    - **Date** — toggle between `+7 days` (automatic) or `Pick a date` (custom date picker)
+   - **Attendees / Location / Body** — carried over from the original meeting
    - **Attachments** — check or uncheck files to include in the reminder note
-   - **Recurrence** — if the original is recurring, choose *This instance only* or *Entire series*
-   - **Location** — keep as Teams / convert to in-person, or keep the physical room
 4. Click **"Create Follow-up"** at the bottom
 5. A new appointment draft opens — review, add attachments manually if needed, and send
 
@@ -107,58 +110,71 @@ The server runs at `https://localhost:3000` and serves the add-in files to OWA.
 
 ## Stopping and restarting the server
 
-The server runs silently in the background. To stop it if needed:
+The server runs silently in the background. To **stop** it:
 
 1. Open **Task Manager** (`Ctrl + Shift + Esc`)
 2. Go to the **Details** tab
 3. Find `node.exe` → right-click → **End task**
 
-To start it again without rebooting, double-click **`Start-FollowupAddin.bat`**.
+To **start** it again without rebooting, double-click **`Start-FollowupAddin.bat`** (this opens a visible window so you can see the server status).
+
+---
+
+## Re-registering auto-start (after moving the folder)
+
+If you move the project folder, the auto-start task will point to the wrong path.
+Fix it by running **`Setup-AutoStart.bat`** from the new location — it re-registers both the Startup folder shortcut and the Task Scheduler entry.
 
 ---
 
 ## Removing auto-start
 
-To stop the server from launching at login, open a **Command Prompt** and run:
+To stop the server from launching at login:
 
 ```
 schtasks /delete /tn "FollowupMeetingAddinServer" /f
 ```
 
-Or open **Task Scheduler** (search in Start menu), find `FollowupMeetingAddinServer`, and delete it.
+And delete `FollowupAddinServer.lnk` from:
+```
+%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup\
+```
 
 ---
 
 ## Troubleshooting
 
 ### "Create Follow-up" button doesn't appear
-- Make sure the server is running — open `https://localhost:3000` in your browser.
-  You should see a page load, not a connection error.
-- If the browser shows a certificate warning, re-run `Install.bat` to reinstall the trusted certificate.
+- Check the server is running: open `https://localhost:3000` in your browser.
+  You should see a page (not a connection error).
+- If the browser shows a certificate warning, re-run `Install.bat` to reinstall the certificate.
 - Remove and re-add the add-in in OWA (repeat the Sideloading steps above).
 
 ### OWA shows "App error" or a blank panel
 - The server is likely not running. Start it with `Start-FollowupAddin.bat` and reload OWA.
 
 ### Certificate error / browser refuses localhost
-The HTTPS certificate is machine-specific and expires after 30 days. To renew:
+The dev certificate may have expired. To renew:
 ```
 npx office-addin-dev-certs install --force
 ```
 Then restart the server.
 
-### "npm is not recognized" error when running the bat file
+### "npm is not recognized" error
 - Node.js is not installed or not in PATH.
-- Install from https://nodejs.org (LTS) and restart your PC.
+- Install from https://nodejs.org (LTS) and **restart your PC**.
 
 ### The server was working, then stopped after a reboot
-- The auto-start task may not have been registered (IT policy sometimes blocks it).
-- Double-click `Start-FollowupAddin.bat` to start manually.
-- Re-run `Install.bat` to try registering the auto-start task again.
+- The auto-start task may not have been registered (IT policy sometimes blocks Task Scheduler).
+- Run `Setup-AutoStart.bat` to try registering it again.
+- If that also fails, double-click `Start-FollowupAddin.bat` to start manually.
 
-### IT policy blocks Task Scheduler registration
-- `Install.bat` automatically falls back to the Windows Startup folder.
-- If that also fails, pin `Start-FollowupAddin.bat` to your taskbar and run it manually when needed.
+### Bat files open and immediately close / show a syntax error
+- Make sure you are running the `.bat` files from the correct project folder.
+- Try right-clicking the bat file and choosing **"Run as administrator"** (needed for certificate install step).
+
+### Install.bat shows "The system cannot find the path specified"
+- This usually means Node.js is not in PATH yet. Restart your PC after installing Node.js.
 
 ---
 
@@ -167,17 +183,17 @@ Then restart the server.
 ```
 outlook-followup-addin/
 |
-+-- Install.bat                     Run this ONCE on each new PC
-+-- Start-FollowupAddin.bat         Manual server start (if needed)
-+-- Start-FollowupAddin-Hidden.vbs  Called by auto-start task (no window)
-+-- Setup-AutoStart.bat             Re-register auto-start task only
++-- Install.bat                     Run ONCE on each new PC
++-- Start-FollowupAddin.bat         Manual server start (visible window)
++-- Start-FollowupAddin-Hidden.vbs  Called by auto-start (no window)
++-- Setup-AutoStart.bat             Re-register auto-start after moving the folder
 |
-+-- manifest.json                   Unified Manifest (Outlook on the Web / New Outlook)
++-- manifest.json                   Unified Manifest (OWA / New Outlook)
 +-- manifest.xml                    Legacy XML manifest (Classic Outlook)
 |
-+-- package.json                    Node.js project config + npm scripts
-+-- tsconfig.json                   TypeScript compiler config
-+-- webpack.config.js               Build config + HTTPS dev server setup
++-- package.json
++-- tsconfig.json
++-- webpack.config.js
 |
 +-- assets/                         Icon PNG files (16, 32, 80, 192 px)
 +-- scripts/
@@ -185,12 +201,25 @@ outlook-followup-addin/
 |
 +-- src/
     +-- commands/
-    |   +-- commands.html           Hidden function-file (required by manifest)
-    |   +-- commands.ts             (reserved for future ribbon commands)
+    |   +-- commands.html
+    |   +-- commands.ts
     +-- taskpane/
-        +-- taskpane.html           Pre-flight UI (HTML + embedded CSS)
+        +-- taskpane.html           Side-panel UI (HTML + embedded CSS)
         +-- taskpane.ts             Core logic (TypeScript)
 ```
+
+---
+
+## How auto-start works
+
+The setup registers **two** mechanisms so the server starts reliably even if one is blocked by IT policy:
+
+| Mechanism | Trigger | Delay | Notes |
+|---|---|---|---|
+| **Startup folder shortcut** | Login | ~12 s | `%APPDATA%\...\Startup\FollowupAddinServer.lnk` → wscript.exe → VBScript → bat |
+| **Task Scheduler** (`FollowupMeetingAddinServer`) | Login | 20 s | Backup; runs the same VBScript |
+
+Both call `Start-FollowupAddin-Hidden.vbs`, which starts `Start-FollowupAddin.bat` with a hidden window. No console window ever appears.
 
 ---
 
@@ -212,25 +241,24 @@ npm run validate
 node scripts/generate-icons.js
 ```
 
-Changes to `.ts` or `.html` files are picked up automatically when using `npm start` (hot module replacement). Just reload the taskpane in OWA after saving.
+Changes to `.ts` or `.html` files are picked up automatically when using `npm start`. Reload the taskpane in OWA after saving.
 
 ### Deploying to production (hosting on a real server)
 
 1. Run `npm run build` — output lands in `dist/`
 2. Deploy `dist/` and `assets/` to any HTTPS web server
-3. In `manifest.json` **and** `manifest.xml`, replace every occurrence of
-   `https://localhost:3000` with your production server URL
-4. Distribute the updated `manifest.json` via your Exchange admin or an internal add-in catalog
+3. In `manifest.json` **and** `manifest.xml`, replace every `https://localhost:3000` with your production URL
+4. Distribute the updated manifest via your Exchange admin or an internal add-in catalog
 
 ### Key technical decisions
 
 | Decision | Why |
 |---|---|
-| UTC epoch math for +7 days | `date.getTime() + 604_800_000` is immune to DST and timezone changes. Using `setDate(d+7)` breaks twice a year. |
-| `resolveField()` helper | `item.subject` / `item.start` / etc. are plain values in attendee (read) mode but async getter objects in organizer (compose) mode. One helper handles both transparently. |
-| Triple fallback for appointment creation | OWA does not consistently expose `displayNewAppointmentFormAsync` (Mailbox 1.9). Falls back to `displayNewAppointmentForm`, then to an OWA calendar deep-link URL. |
-| Body via `item.body.getAsync(Html)` | Works in both read and compose mode; the full original invitation HTML is carried over into the new appointment body. |
-| Subject prefix loop | Strips `RE:/FW:/Antw:/WG:` in a loop until stable — handles arbitrarily nested prefixes like `RE: RE: FW: RE: Meeting`. |
+| UTC epoch math for +7 days | `date.getTime() + 604_800_000` is immune to DST. Using `setDate(d+7)` breaks twice a year. |
+| `resolveField()` helper | `item.subject` / `item.start` etc. are plain values in attendee (read) mode but async getter objects in organizer (compose) mode. One helper handles both. |
+| Triple fallback for appointment creation | OWA does not consistently expose `displayNewAppointmentFormAsync`. Falls back to `displayNewAppointmentForm`, then to an OWA calendar deep-link URL. |
+| `item.body.getAsync(Html)` | Works in both read and compose mode; carries the full original invitation HTML into the new appointment. |
+| Plain ASCII in all `.bat` files | cmd.exe on non-English Windows reads batch files using the system ANSI code page. Unicode characters (even in comments) cause silent syntax errors. |
 
 ---
 
@@ -238,8 +266,14 @@ Changes to `.ts` or `.html` files are picked up automatically when using `npm st
 
 | Platform | Status |
 |---|---|
-| Outlook on the Web (OWA) | Fully supported |
-| New Outlook for Windows | Fully supported |
-| Classic Outlook for Windows | Use `manifest.xml`; IT may restrict add-in deployment |
+| Outlook on the Web (OWA) | ✅ Fully supported |
+| New Outlook for Windows | ✅ Fully supported |
+| Classic Outlook for Windows | Use `manifest.xml`; IT may restrict sideloading |
 | Outlook for Mac | Partially supported — test with your version |
-| Outlook Mobile | Not supported (`displayNewAppointmentFormAsync` unavailable on mobile) |
+| Outlook Mobile | ❌ Not supported |
+
+---
+
+## License
+
+Apache 2.0 — Copyright 2026 [Mustafa Tunca](https://mustafatunca.com)
