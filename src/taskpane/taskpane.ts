@@ -156,14 +156,27 @@ function resolveField<T>(field: any, fallback: T): Promise<T> {
   return Promise.resolve(field != null ? (field as T) : fallback);
 }
 
-async function loadMeetingData(): Promise<void> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const item = Office.context.mailbox.item as any;
+/** Shows an error and makes the content pane visible so the banner is seen. */
+function fatalError(msg: string): void {
+  showSection("loading", false);
+  showSection("content", true);   // must be visible for error-banner to show
+  showSection("success-card", false);
+  showError(msg);
+}
 
+async function loadMeetingData(): Promise<void> {
   showSection("loading", true);
   showSection("content", false);
   showSection("success-card", false);
   showSection("error-banner", false);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const item = Office.context.mailbox.item as any;
+
+  if (!item) {
+    fatalError("No appointment item found. Open the add-in from inside an appointment.");
+    return;
+  }
 
   try {
     const [subjectRaw, startRaw, endRaw, locationRaw, requiredRaw, optionalRaw, originalBody] = await Promise.all([
@@ -219,8 +232,18 @@ async function loadMeetingData(): Promise<void> {
     };
 
     // getAttachmentsAsync requires Mailbox 1.8 and is read-mode only.
+    // Add a 5-second timeout so a silent API failure never leaves the spinner stuck.
     if (typeof item.getAttachmentsAsync === "function") {
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) { settled = true; doRender([]); }
+      }, 5000);
+
       item.getAttachmentsAsync((attResult: Office.AsyncResult<Office.AttachmentDetails[]>) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+
         const attachments: AttachmentInfo[] = [];
         if (attResult.status === Office.AsyncResultStatus.Succeeded && attResult.value) {
           for (const att of attResult.value) {
@@ -235,8 +258,7 @@ async function loadMeetingData(): Promise<void> {
       doRender([]);
     }
   } catch (err) {
-    showSection("loading", false);
-    showError(err instanceof Error ? err.message : String(err));
+    fatalError(err instanceof Error ? err.message : String(err));
   }
 }
 
