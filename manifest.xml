@@ -12,8 +12,8 @@
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Follow-up Meeting"/>
   <Description DefaultValue="Create smart follow-up appointments with one click."/>
-  <IconUrl DefaultValue="https://localhost:3000/assets/icon-80.png"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/assets/icon-80.png"/>
+  <IconUrl DefaultValue="https://raw.githubusercontent.com/mustafa-tunca/outlook-followup-addin/main/assets/icon-80.png"/>
+  <HighResolutionIconUrl DefaultValue="https://raw.githubusercontent.com/mustafa-tunca/outlook-followup-addin/main/assets/icon-80.png"/>
   <SupportUrl DefaultValue="https://example.com"/>
 
   <AppDomains>
@@ -111,9 +111,9 @@
 
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/assets/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/assets/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/assets/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://raw.githubusercontent.com/mustafa-tunca/outlook-followup-addin/main/assets/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://raw.githubusercontent.com/mustafa-tunca/outlook-followup-addin/main/assets/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://raw.githubusercontent.com/mustafa-tunca/outlook-followup-addin/main/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html"/>

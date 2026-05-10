@@ -18,8 +18,8 @@
     "full": "Automatically creates follow-up appointments with smart subject cleaning, UTC-safe scheduling (+7 days), attachment carry-over, recurrence awareness, and Teams/room location handling."
   },
   "icons": {
-    "outline": "https://localhost:3000/assets/icon-outline.png",
-    "color": "https://localhost:3000/assets/icon-color.png"
+    "outline": "https://raw.githubusercontent.com/mustafa-tunca/outlook-followup-addin/main/assets/icon-outline.png",
+    "color": "https://raw.githubusercontent.com/mustafa-tunca/outlook-followup-addin/main/assets/icon-color.png"
   },
   "accentColor": "#0078d4",
   "extensions": [
@@ -77,9 +77,9 @@
                   "id": "FollowUpGroup",
                   "label": "Follow-up",
                   "icons": [
-                    { "size": 16, "url": "https://localhost:3000/assets/icon-16.png" },
-                    { "size": 32, "url": "https://localhost:3000/assets/icon-32.png" },
-                    { "size": 80, "url": "https://localhost:3000/assets/icon-80.png" }
+                    { "size": 16, "url": "https://raw.githubusercontent.com/mustafa-tunca/outlook-followup-addin/main/assets/icon-16.png" },
+                    { "size": 32, "url": "https://raw.githubusercontent.com/mustafa-tunca/outlook-followup-addin/main/assets/icon-32.png" },
+                    { "size": 80, "url": "https://raw.githubusercontent.com/mustafa-tunca/outlook-followup-addin/main/assets/icon-80.png" }
                   ],
                   "controls": [
                     {
@@ -87,9 +87,9 @@
                       "type": "button",
                       "label": "Create Follow-up",
                       "icons": [
-                        { "size": 16, "url": "https://localhost:3000/assets/icon-16.png" },
-                        { "size": 32, "url": "https://localhost:3000/assets/icon-32.png" },
-                        { "size": 80, "url": "https://localhost:3000/assets/icon-80.png" }
+                        { "size": 16, "url": "https://raw.githubusercontent.com/mustafa-tunca/outlook-followup-addin/main/assets/icon-16.png" },
+                        { "size": 32, "url": "https://raw.githubusercontent.com/mustafa-tunca/outlook-followup-addin/main/assets/icon-32.png" },
+                        { "size": 80, "url": "https://raw.githubusercontent.com/mustafa-tunca/outlook-followup-addin/main/assets/icon-80.png" }
                       ],
                       "supertip": {
                         "title": "Create Follow-up Meeting",
