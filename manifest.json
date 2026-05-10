@@ -1,0 +1,112 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.17/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.17",
+  "version": "1.0.0",
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "developer": {
+    "name": "Mustafa Tunca",
+    "websiteUrl": "https://mustafatunca.com",
+    "privacyUrl": "https://mustafatunca.com",
+    "termsOfUseUrl": "https://mustafatunca.com"
+  },
+  "name": {
+    "short": "Follow-up Meeting",
+    "full": "Smart Follow-up Meeting Creator"
+  },
+  "description": {
+    "short": "Create smart follow-up meetings in one click.",
+    "full": "Automatically creates follow-up appointments with smart subject cleaning, UTC-safe scheduling (+7 days), attachment carry-over, recurrence awareness, and Teams/room location handling."
+  },
+  "icons": {
+    "outline": "https://localhost:3000/assets/icon-outline.png",
+    "color": "https://localhost:3000/assets/icon-color.png"
+  },
+  "accentColor": "#0078d4",
+  "extensions": [
+    {
+      "requirements": {
+        "scopes": ["mail"],
+        "capabilities": [
+          { "name": "Mailbox", "minVersion": "1.5" }
+        ]
+      },
+      "runtimes": [
+        {
+          "id": "TaskPaneRuntime",
+          "type": "general",
+          "code": {
+            "page": "https://localhost:3000/taskpane.html"
+          },
+          "lifetime": "short",
+          "actions": [
+            {
+              "id": "ShowPreflightPane",
+              "type": "openPage",
+              "pinnable": false,
+              "view": "taskpane"
+            }
+          ]
+        },
+        {
+          "id": "CommandsRuntime",
+          "type": "general",
+          "code": {
+            "page": "https://localhost:3000/commands.html"
+          },
+          "lifetime": "short",
+          "actions": [
+            {
+              "id": "CreateFollowUpCommand",
+              "type": "executeFunction",
+              "displayName": "Create Follow-up"
+            }
+          ]
+        }
+      ],
+      "ribbons": [
+        {
+          "contexts": [
+            "meetingDetailsOrganizer",
+            "meetingDetailsAttendee"
+          ],
+          "tabs": [
+            {
+              "builtInTabId": "TabDefault",
+              "groups": [
+                {
+                  "id": "FollowUpGroup",
+                  "label": "Follow-up",
+                  "icons": [
+                    { "size": 16, "url": "https://localhost:3000/assets/icon-16.png" },
+                    { "size": 32, "url": "https://localhost:3000/assets/icon-32.png" },
+                    { "size": 80, "url": "https://localhost:3000/assets/icon-80.png" }
+                  ],
+                  "controls": [
+                    {
+                      "id": "CreateFollowUpButton",
+                      "type": "button",
+                      "label": "Create Follow-up",
+                      "icons": [
+                        { "size": 16, "url": "https://localhost:3000/assets/icon-16.png" },
+                        { "size": 32, "url": "https://localhost:3000/assets/icon-32.png" },
+                        { "size": 80, "url": "https://localhost:3000/assets/icon-80.png" }
+                      ],
+                      "supertip": {
+                        "title": "Create Follow-up Meeting",
+                        "description": "Open the smart pre-flight dialog to schedule a follow-up appointment 7 days from now."
+                      },
+                      "actionId": "ShowPreflightPane"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "validDomains": [
+    "localhost"
+  ]
+}

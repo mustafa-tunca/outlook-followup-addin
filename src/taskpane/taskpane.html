@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Follow-up Meeting</title>
+
+    <!-- Office.js must load first, before any add-in script -->
+    <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+
+    <style>
+      /* ── Reset & tokens ─────────────────────────────────────────── */
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --brand:       #0078d4;
+        --brand-dark:  #005a9e;
+        --brand-light: #eff6fc;
+        --success:     #107c10;
+        --warning:     #797673;
+        --danger:      #a4262c;
+        --surface:     #ffffff;
+        --surface-alt: #f8f8f8;
+        --border:      #e1dfdd;
+        --text:        #201f1e;
+        --text-muted:  #605e5c;
+        --radius:      4px;
+        --shadow:      0 2px 8px rgba(0,0,0,.12);
+        --font:        'Segoe UI', Calibri, Arial, sans-serif;
+      }
+
+      body {
+        font-family: var(--font);
+        font-size: 13px;
+        color: var(--text);
+        background: var(--surface);
+        line-height: 1.5;
+        overflow-x: hidden;
+      }
+
+      /* ── Layout ──────────────────────────────────────────────────── */
+      .pane {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      .pane-header {
+        background: var(--brand);
+        color: #fff;
+        padding: 12px 16px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+
+      .pane-header h1 {
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .pane-header p {
+        font-size: 11px;
+        opacity: .85;
+        margin-top: 2px;
+      }
+
+      .pane-body {
+        flex: 1;
+        padding: 14px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .pane-footer {
+        border-top: 1px solid var(--border);
+        padding: 10px 16px;
+        display: flex;
+        gap: 8px;
+        position: sticky;
+        bottom: 0;
+        background: var(--surface);
+        z-index: 10;
+      }
+
+      /* ── Cards / sections ────────────────────────────────────────── */
+      .card {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+
+      .card-header {
+        background: var(--surface-alt);
+        padding: 6px 12px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .card-body {
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      /* ── Form controls ───────────────────────────────────────────── */
+      .field label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 3px;
+      }
+
+      .field input[type="text"],
+      .field textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 6px 8px;
+        font-family: var(--font);
+        font-size: 13px;
+        color: var(--text);
+        background: var(--surface);
+        transition: border-color .15s;
+        resize: none;
+      }
+
+      .field input[type="text"]:focus,
+      .field textarea:focus {
+        outline: none;
+        border-color: var(--brand);
+        box-shadow: 0 0 0 2px rgba(0,120,212,.2);
+      }
+
+      .info-row {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .info-row .label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      .info-row .value {
+        font-size: 13px;
+        color: var(--text);
+        word-break: break-word;
+      }
+
+      .info-row .value.muted {
+        color: var(--text-muted);
+        font-size: 11px;
+      }
+
+      /* ── Toggle (radio pill) ─────────────────────────────────────── */
+      .toggle-group {
+        display: flex;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        overflow: hidden;
+        width: 100%;
+      }
+
+      .toggle-group input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .toggle-group label {
+        flex: 1;
+        text-align: center;
+        padding: 6px 8px;
+        font-size: 12px;
+        cursor: pointer;
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        transition: background .12s, color .12s;
+        user-select: none;
+      }
+
+      .toggle-group label:last-of-type { border-right: none; }
+
+      .toggle-group input[type="radio"]:checked + label {
+        background: var(--brand);
+        color: #fff;
+        font-weight: 600;
+      }
+
+      /* ── Attachment list ─────────────────────────────────────────── */
+      .attachment-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 0;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+      }
+
+      .attachment-item:last-child { border-bottom: none; }
+
+      .att-checkbox {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--brand);
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+
+      .att-name {
+        flex: 1;
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .att-size {
+        font-size: 11px;
+        color: var(--text-muted);
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      /* ── Buttons ─────────────────────────────────────────────────── */
+      .btn {
+        padding: 7px 16px;
+        border-radius: var(--radius);
+        border: none;
+        font-family: var(--font);
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background .15s, opacity .15s;
+        white-space: nowrap;
+      }
+
+      .btn-primary {
+        background: var(--brand);
+        color: #fff;
+        flex: 1;
+      }
+
+      .btn-primary:hover { background: var(--brand-dark); }
+      .btn-primary:disabled { opacity: .55; cursor: default; }
+
+      .btn-secondary {
+        background: var(--surface);
+        color: var(--text);
+        border: 1px solid var(--border);
+      }
+
+      .btn-secondary:hover { background: var(--surface-alt); }
+
+      /* ── Loading ─────────────────────────────────────────────────── */
+      #loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        height: 100vh;
+        color: var(--text-muted);
+        font-size: 13px;
+      }
+
+      .spinner {
+        width: 28px;
+        height: 28px;
+        border: 3px solid var(--border);
+        border-top-color: var(--brand);
+        border-radius: 50%;
+        animation: spin .7s linear infinite;
+      }
+
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      /* ── Error banner ────────────────────────────────────────────── */
+      #error-banner {
+        display: none;
+        background: #fde7e9;
+        border: 1px solid #f1707b;
+        border-radius: var(--radius);
+        padding: 8px 10px;
+        font-size: 12px;
+        color: var(--danger);
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      #error-banner button {
+        background: none;
+        border: none;
+        color: var(--danger);
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 1;
+        flex-shrink: 0;
+        margin-left: auto;
+      }
+
+      /* ── Success card ────────────────────────────────────────────── */
+      #success-card {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        height: 100vh;
+        padding: 24px;
+        text-align: center;
+        color: var(--text);
+      }
+
+      .success-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: #dff6dd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+      }
+
+      #success-card h2 { font-size: 16px; font-weight: 600; color: var(--success); }
+      #success-card p  { font-size: 12px; color: var(--text-muted); max-width: 220px; }
+
+      /* ── UTC badge ───────────────────────────────────────────────── */
+      .utc-badge {
+        display: inline-block;
+        background: var(--brand-light);
+        border: 1px solid #c7e0f4;
+        border-radius: 3px;
+        padding: 2px 6px;
+        font-size: 10px;
+        color: var(--brand);
+        font-family: monospace;
+        margin-top: 3px;
+        word-break: break-all;
+      }
+
+      /* ── Section description ─────────────────────────────────────── */
+      .section-hint {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-bottom: 2px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- ── Loading state ────────────────────────────────────────────── -->
+    <div id="loading">
+      <div class="spinner"></div>
+      <span>Loading meeting data…</span>
+    </div>
+
+    <!-- ── Main content ─────────────────────────────────────────────── -->
+    <div class="pane" id="content" style="display:none">
+
+      <div class="pane-header">
+        <h1>Create Follow-up Meeting</h1>
+        <p>Pre-flight check — review before creating the draft</p>
+      </div>
+
+      <div class="pane-body">
+
+        <!-- Error banner (hidden by default) -->
+        <div id="error-banner" style="display:none" role="alert">
+          <span>⚠️</span>
+          <span id="error-text"></span>
+          <button aria-label="Dismiss" onclick="dismissError()">✕</button>
+        </div>
+
+        <!-- ── Original meeting info ─────────────────────────────── -->
+        <div class="card">
+          <div class="card-header">Original Meeting</div>
+          <div class="card-body">
+            <div class="info-row">
+              <span class="label">Subject</span>
+              <span class="value" id="orig-subject">—</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Date &amp; Time</span>
+              <span class="value" id="orig-date">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── New meeting ──────────────────────────────────────── -->
+        <div class="card">
+          <div class="card-header">Follow-up Details</div>
+          <div class="card-body">
+
+            <!-- Editable subject -->
+            <div class="field">
+              <label for="new-subject">Subject</label>
+              <input type="text" id="new-subject" spellcheck="true"
+                     aria-label="Follow-up meeting subject" />
+            </div>
+
+            <!-- Follow-up date -->
+            <div class="field">
+              <label>Follow-up Date</label>
+              <div class="toggle-group" role="radiogroup" aria-label="Date mode" style="margin-bottom:6px">
+                <input type="radio" id="date-auto" name="date-mode" value="auto"
+                       checked onchange="onDateModeChange()" />
+                <label for="date-auto">+7 days</label>
+                <input type="radio" id="date-custom" name="date-mode" value="custom"
+                       onchange="onDateModeChange()" />
+                <label for="date-custom">Pick a date</label>
+              </div>
+              <div id="date-auto-display">
+                <span class="value" id="new-date">—</span>
+                <span class="utc-badge" id="utc-detail"></span>
+              </div>
+              <div id="date-picker-wrap" style="display:none">
+                <input type="datetime-local" id="date-picker"
+                       style="width:100%;border:1px solid var(--border);border-radius:var(--radius);
+                              padding:6px 8px;font-family:var(--font);font-size:13px;color:var(--text);
+                              background:var(--surface);" />
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ── Attachments ──────────────────────────────────────── -->
+        <div class="card" id="attachment-section" style="display:none">
+          <div class="card-header">Attachments</div>
+          <div class="card-body">
+            <p class="section-hint">
+              Select which attachments to note in the meeting body.
+              They must be added manually to the draft.
+            </p>
+            <div id="attachment-list"></div>
+          </div>
+        </div>
+
+        <!-- ── Recurrence ───────────────────────────────────────── -->
+        <div class="card" id="recurrence-section" style="display:none">
+          <div class="card-header">Recurrence</div>
+          <div class="card-body">
+            <p class="section-hint">This appointment is part of a recurring series.</p>
+            <div class="toggle-group" role="radiogroup" aria-label="Recurrence scope">
+              <input type="radio" id="this-instance" name="recurrence"
+                     value="instance" checked />
+              <label for="this-instance">This instance only</label>
+
+              <input type="radio" id="entire-series" name="recurrence"
+                     value="series" />
+              <label for="entire-series">Entire series</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Location ────────────────────────────────────────── -->
+        <div class="card" id="location-section" style="display:none">
+          <div class="card-header">Location</div>
+          <div class="card-body">
+            <div class="info-row">
+              <span class="label">Original Location</span>
+              <span class="value" id="location-value">—</span>
+            </div>
+
+            <!-- Online meeting row -->
+            <div id="online-meeting-row" style="display:none">
+              <p class="section-hint">This was an online meeting (Teams / video).</p>
+              <div class="toggle-group" role="radiogroup" aria-label="Online meeting option">
+                <input type="radio" id="keep-online" name="location-online"
+                       value="online" checked />
+                <label for="keep-online">Keep as online meeting</label>
+
+                <input type="radio" id="convert-to-room" name="location-online"
+                       value="inperson" />
+                <label for="convert-to-room">Convert to in-person</label>
+              </div>
+            </div>
+
+            <!-- Physical room row -->
+            <div id="room-meeting-row" style="display:none">
+              <p class="section-hint">This meeting used a physical room or location.</p>
+              <div class="toggle-group" role="radiogroup" aria-label="Room option">
+                <input type="radio" id="convert-to-teams" name="location-room"
+                       value="teams" checked />
+                <label for="convert-to-teams">Convert to Teams</label>
+
+                <input type="radio" id="keep-room" name="location-room"
+                       value="room" />
+                <label for="keep-room">Keep same room</label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div><!-- /pane-body -->
+
+      <div class="pane-footer">
+        <button id="create-btn" class="btn btn-primary"
+                onclick="createFollowUp()">
+          Create Follow-up
+        </button>
+      </div>
+
+      <div style="text-align:center;padding:6px 16px 10px;font-size:10px;color:var(--text-muted)">
+        by <a href="https://mustafatunca.com" target="_blank"
+              style="color:var(--text-muted);text-decoration:none;border-bottom:1px dotted var(--border)"
+              title="mustafatunca.com">Mustafa Tunca</a>
+      </div>
+
+    </div><!-- /pane -->
+
+    <!-- ── Success state ────────────────────────────────────────────── -->
+    <div id="success-card">
+      <div class="success-icon">✓</div>
+      <h2>Draft Created!</h2>
+      <p id="success-msg">
+        Your follow-up meeting draft has been opened. Add attachments
+        manually if needed, then send.
+      </p>
+    </div>
+
+  </body>
+</html>
